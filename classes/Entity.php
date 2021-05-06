@@ -24,7 +24,7 @@ class Entity {
     protected $entityTypeKey;
     protected $entityTypeInfo;
     protected $oldData;
-    protected $errors;
+    public $errors;
 
     function __construct(EntityFactory $factory, $entity_type, $id = null) {
         if (!$info = $factory->getEntityTypeInfo($entity_type)) {
@@ -61,9 +61,10 @@ class Entity {
         $this->errors = [];
 
         foreach ($data as $key => $value) {
-            if (!$this->validateProperty($key, $value)) {
-                $this->errors[] = $key;
-            }
+//            if (!$this->validateProperty($key, $value)) {
+//                $this->errors[] = $key;
+//            }
+            $this->validateProperty($key, $value);
         }
 
         if (!empty($this->errors)) {
@@ -114,17 +115,23 @@ class Entity {
 
     protected function validateProperty($key, $value) {
         if (!array_key_exists($key, $this->data) || !isset($this->entityTypeInfo['properties'][$key])) {
+            $this->errors[$key] = 'Key does not exists';
             return false;
         }
 
         $info = $this->entityTypeInfo['properties'][$key];
         if ($value === null || $value === '') {
-            return empty($info['required']);
+            if ($info['required']) {
+                $this->errors[$key] = 'Value is empty';
+                return false;
+            }
+            return $info['required'];
         }
 
         switch ($info['type']) {
             case 'email':
                 if (!isEmail($value)) {
+                    $this->errors[$key] = 'Email is invalid';
                     return false;
                 }
 
@@ -132,42 +139,78 @@ class Entity {
 
             case 'text':
                 if (!is_string($value)) {
+                    $this->errors[$key] = 'Not String';
                     return false;
                 }
 
                 break;
 
             case 'date':
+                if (!$this->validateDate($value)) {
+                    $this->errors[$key] = 'Wrong date format provided';
+                    return false;
+                }
+                return true;
             case 'integer':
                 if (!is_numeric($value) || intval($value) != $value) {
+                    $this->errors[$key] = 'Not Integer';
                     return false;
                 }
 
                 break;
 
             case 'record':
+                if (!defined('PROJECT_ID')) {
+                    $this->errors[$key] = 'Attribute marked as Project but no project ID defined';
+                }
+
+                if (!Records::recordExists(PROJECT_ID, $value)) {
+                    $this->errors[$key] = 'Attribute marked as Project but no record does not exist';
+                }
+
                 return defined('PROJECT_ID') && Records::recordExists(PROJECT_ID, $value);
 
             case 'user':
                 $db = new RedCapDB();
-                return $db->usernameExists($value);
+                if (!$db->usernameExists($value)) {
+                    $this->errors[$key] = 'User does not exist';
+                    return false;
+                }
+                return true;
 
             case 'project':
                 $db = new RedCapDB();
                 if (!$db->getProject($value)) {
+                    $this->errors[$key] = 'Project does not exist';
                     return false;
                 }
 
-                return !defined('USERID') || SUPER_USER || ACCOUNT_MANAGER || UserRights::getPrivileges($value, USERID);
+                if ((!defined('USERID') || SUPER_USER || ACCOUNT_MANAGER || UserRights::getPrivileges($value, USERID)) == false) {
+                    $this->errors[$key] = 'User has no permission';
+                }
+
+                return true;
 
             case 'long_text':
-                return is_string($value);
+                if (!is_string($value)) {
+                    $this->errors[$key] = 'Not String';
+                    return false;
+                }
+                return true;
 
             case 'boolean':
-                return is_bool($value) || $value == 1 || $value == 0;
+                if (!is_bool($value) || $value == 1 || $value == 0) {
+                    $this->errors[$key] = 'Not Boolean';
+                    return false;
+                }
+                return true;
 
             case 'entity_reference':
-                return !empty($info['entity_type']) && $this->factory->getInstance($info['entity_type'], $value);
+                if ((!empty($info['entity_type']) && $this->factory->getInstance($info['entity_type'], $value)) == false) {
+                    $this->errors[$key] = 'Entity Referance cant be found';
+                    return false;
+                }
+                return true;
 
             case 'data':
             case 'json':
@@ -195,7 +238,14 @@ class Entity {
         return true;
     }
 
-    function load($id) {
+    protected function validateDate($date, $format = 'Y-m-d H:i:s')
+    {
+        $d = \DateTime::createFromFormat($format, $date);
+        return $d && $d->format($format) == $date;
+    }
+
+    function load($id)
+    {
         $entity_type = db_escape($this->entityTypeKey);
         if (!($q = db_query('SELECT * FROM `redcap_entity_' . $entity_type . '` WHERE id = "' . intval($id) . '"')) || !db_num_rows($q)) {
             return false;

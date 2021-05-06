@@ -20,11 +20,15 @@ define('ENTITY_TYPE_ENABLED', 'enabled');
 /**
  * Entity factory class.
  */
-class EntityFactory {
+class EntityFactory
+{
     static protected $modules;
     static protected $entityTypes;
 
-    function __construct($reset = false) {
+    public $errors;
+
+    function __construct($reset = false)
+    {
         if ($reset || !isset(self::$entityTypes)) {
             $this->reset();
         }
@@ -186,6 +190,8 @@ class EntityFactory {
         }
 
         if (!$entity->create($data)) {
+            $this->errors = $entity->errors;
+
             return false;
         }
 
