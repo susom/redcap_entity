@@ -199,7 +199,7 @@ class Entity {
                 return true;
 
             case 'boolean':
-                if (!is_bool($value) || $value == 1 || $value == 0) {
+                if (!is_bool($value) && $value == 1 && $value == 0) {
                     $this->errors[$key] = 'Not Boolean';
                     return false;
                 }
