@@ -240,8 +240,9 @@ class Entity {
 
     protected function validateDate($date, $format = 'Y-m-d H:i:s')
     {
-        $d = \DateTime::createFromFormat($format, $date);
-        return $d && $d->format($format) == $date;
+        return ((string)(int)$date === $date)
+            && ($date <= PHP_INT_MAX)
+            && ($date >= ~PHP_INT_MAX);
     }
 
     function load($id)
