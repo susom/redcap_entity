@@ -240,9 +240,9 @@ class Entity {
 
     protected function validateDate($date, $format = 'Y-m-d H:i:s')
     {
-        return ((string)(int)$date === $date)
+        return ((int)$date === $date)
             && ($date <= PHP_INT_MAX)
-            && ($date >= ~PHP_INT_MAX);
+            && ($date >= PHP_INT_MIN);
     }
 
     function load($id)
