@@ -240,8 +240,8 @@ class Entity {
 
     protected function validateDate($date, $format = 'Y-m-d H:i:s')
     {
-        return ((string)(int)$date === $date)
-            && ($date <= PHP_INT_MAX)
+
+        return ($date <= PHP_INT_MAX)
             && ($date >= ~PHP_INT_MAX);
     }
 
