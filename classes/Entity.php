@@ -138,8 +138,8 @@ class Entity {
                 break;
 
             case 'text':
-                if (!is_string($value)) {
-                    $this->errors[$key] = 'Not String';
+                if (!$this->is_stringy($value)) {
+                    $this->errors[$key] = 'Not Stringy';
                     return false;
                 }
 
@@ -192,8 +192,8 @@ class Entity {
                 return true;
 
             case 'long_text':
-                if (!is_string($value)) {
-                    $this->errors[$key] = 'Not String';
+                if (!$this->is_stringy($value)) {
+                    $this->errors[$key] = 'Not Stringy';
                     return false;
                 }
                 return true;
@@ -237,6 +237,13 @@ class Entity {
 
         return true;
     }
+
+    // Can a value be coerced nicely into a string
+    protected function is_stringy($val) {
+        return (is_string($val) || is_numeric($val)
+            || (is_object($val) && method_exists($val, '__toString')));
+    }
+
 
     protected function validateDate($date, $format = 'Y-m-d H:i:s')
     {
