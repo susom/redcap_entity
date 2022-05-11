@@ -37,7 +37,13 @@ class EntityQuery {
             $cond .= 'IN ("' . implode('", "', array_map('db_escape', $value)) . '")';
         }
         elseif ($value === null) {
-            $cond = 'IS NULL';
+            $neg = false;
+            if (in_array($op,['!=','<>'])) {
+                $neg = true;
+            } elseif ($op !== '=') {
+                throw new Exception('Invalid NULL operator.');
+            }
+            $cond .= 'IS' . ($neg ? ' NOT ' : ' ') . 'NULL';
         }
         else {
             if (is_bool($value)) {
@@ -116,6 +122,8 @@ class EntityQuery {
                 $sql .= ' OFFSET ' . $this->offset;
             }
         }
+
+        \Plugin::log($sql);
 
         if (!$q = db_query($sql)) {
             return false;
