@@ -123,7 +123,7 @@ class EntityQuery {
             }
         }
 
-        \Plugin::log($sql);
+
 
         if (!$q = db_query($sql)) {
             return false;
