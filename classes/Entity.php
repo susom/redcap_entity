@@ -371,10 +371,10 @@ class Entity {
             }
 
             $this->id = db_insert_id();
-            $this->created = $data['created'];
+            $this->created = $row['created'];
         }
 
-        $this->updated = $data['updated'];
+        $this->updated = $row['updated'];
         $this->oldData = $this->data;
 
         return $this->id;
