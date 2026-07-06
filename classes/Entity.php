@@ -185,7 +185,7 @@ class Entity {
                     return false;
                 }
 
-                if ((!defined('USERID') || SUPER_USER || ACCOUNT_MANAGER || UserRights::getPrivileges($value, USERID)) == false) {
+                if ((!defined('USERID') || (defined('SUPER_USER') && SUPER_USER) || (defined('ACCOUNT_MANAGER') && ACCOUNT_MANAGER) || UserRights::getPrivileges($value, USERID)) == false) {
                     $this->errors[$key] = 'User has no permission';
                 }
 

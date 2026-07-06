@@ -286,7 +286,11 @@ class EntityFactory
         }
 
         foreach (ExternalModules::getEnabledModules() as $prefix => $version) {
-            $module = ExternalModules::getModuleInstance($prefix, $version);
+            try {
+                $module = ExternalModules::getModuleInstance($prefix, $version);
+            } catch (\Throwable $e) {
+                continue;
+            }
             $this->loadModuleEntityTypes($module);
         }
     }
